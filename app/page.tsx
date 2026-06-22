@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Post = {
   id: number;
@@ -23,6 +24,7 @@ const FLAG_COLOR: Record<string, string> = {
 };
 
 export default function Home() {
+  const router = useRouter();
   const [topic, setTopic] = useState("不安・心配");
   const [customTopic, setCustomTopic] = useState("");
   const [memo, setMemo] = useState("");
@@ -64,6 +66,11 @@ export default function Home() {
     navigator.clipboard?.writeText(text.replace(/\\n/g, "\n"));
     setCopied(id);
     setTimeout(() => setCopied(null), 1500);
+  }
+
+  function goToNote(text: string) {
+    sessionStorage.setItem("serena_note_post", text.replace(/\\n/g, "\n"));
+    router.push("/note");
   }
 
   const queued = posts.filter((p) => selected[p.id]);
@@ -213,7 +220,7 @@ export default function Home() {
           )}
 
           {/* ACTIONS */}
-          <div style={{ display: "flex", gap: 7 }}>
+          <div style={{ display: "flex", gap: 7, marginBottom: 7 }}>
             <button onClick={() => toggleSelect(post.id)}
               style={{
                 flex: 2, padding: "7px", borderRadius: 8,
@@ -234,6 +241,19 @@ export default function Home() {
               {copied === post.id ? "✓ コピー済み" : "📋 コピー"}
             </button>
           </div>
+
+          {/* NOTE BUTTON */}
+          <button onClick={() => goToNote(post.text)}
+            style={{
+              width: "100%", padding: "8px",
+              background: "linear-gradient(135deg, #1e2a1e, #2a3a2a)",
+              border: "1px solid #4a7a4a",
+              borderRadius: 8, color: "#90d090",
+              fontSize: "0.72rem", cursor: "pointer", fontWeight: 700,
+              letterSpacing: "0.03em",
+            }}>
+            📝 この投稿をnoteに展開する →
+          </button>
         </div>
       ))}
 

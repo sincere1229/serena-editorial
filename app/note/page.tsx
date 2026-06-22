@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 type NoteResult = {
@@ -28,6 +28,15 @@ export default function NotePage() {
   const [tab, setTab] = useState<"free" | "paid" | "cta">("free");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
+
+  // ライターAIからの引き継ぎ
+  useEffect(() => {
+    const saved = sessionStorage.getItem("serena_note_post");
+    if (saved) {
+      setPost(saved);
+      sessionStorage.removeItem("serena_note_post");
+    }
+  }, []);
 
   async function generate() {
     if (!post.trim()) return;
@@ -90,25 +99,30 @@ export default function NotePage() {
           flex: 1, textAlign: "center", padding: "7px",
           borderRadius: 9, border: "1px solid #3a2a5a",
           color: "#6a5a8a", fontSize: "0.7rem", textDecoration: "none",
+          display: "block",
         }}>
-          ✨ ライターAI
+          ← ライターAIに戻る
         </Link>
-        <div style={{
-          flex: 1, textAlign: "center", padding: "7px",
-          borderRadius: 9, border: "1px solid #7a5acc",
-          background: "#2a1a4a", color: "#c9b8f0", fontSize: "0.7rem",
-        }}>
-          📝 note化AI
-        </div>
       </div>
+
+      {/* 引き継ぎ通知 */}
+      {post && (
+        <div style={{
+          background: "#0f1e10", border: "1px solid #3a6a3a",
+          borderRadius: 10, padding: "10px 14px", marginBottom: 12,
+          fontSize: "0.7rem", color: "#80c080",
+        }}>
+          ✅ ライターAIから投稿を引き継ぎました。そのまま生成できます。
+        </div>
+      )}
 
       {/* INPUT: 元投稿 */}
       <div style={{ background: "#16102a", border: "1px solid #3a2a5a", borderRadius: 14, padding: "16px", marginBottom: 12 }}>
         <p style={{ fontSize: "0.72rem", color: "#9b7ee0", marginBottom: 8, fontWeight: 700 }}>
-          バズった投稿を貼る
+          元になる投稿
         </p>
         <textarea
-          placeholder="例：眠れない夜、頭の中でぐるぐると同じことを考え続けてしまう。&#10;そういうこと、ありませんか？&#10;&#10;それは弱さじゃないと思うんです。…"
+          placeholder="例：眠れない夜、頭の中でぐるぐると同じことを考え続けてしまう。&#10;そういうこと、ありませんか？…"
           value={post}
           onChange={(e) => setPost(e.target.value)}
           rows={6}
@@ -120,7 +134,7 @@ export default function NotePage() {
           }}
         />
         <p style={{ fontSize: "0.63rem", color: "#4a3a6a", marginTop: 6 }}>
-          {post.length}字 入力中
+          {post.length}字
         </p>
       </div>
 
@@ -130,7 +144,7 @@ export default function NotePage() {
           方向性メモ（任意）
         </p>
         <textarea
-          placeholder="例：ここからPDF診断「夜の感情タイプ診断」への導線を入れたい。ワークも1つ入れてほしい。"
+          placeholder="例：PDF診断「夜の感情タイプ診断」への導線を入れたい。ワークも1つ入れてほしい。"
           value={memo}
           onChange={(e) => setMemo(e.target.value)}
           rows={2}
@@ -193,20 +207,14 @@ export default function NotePage() {
 
           {/* PRICE & PRODUCT */}
           <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-            <div style={{
-              flex: 1, background: "#16102a", border: "1px solid #3a2a5a",
-              borderRadius: 12, padding: "12px 14px",
-            }}>
+            <div style={{ flex: 1, background: "#16102a", border: "1px solid #3a2a5a", borderRadius: 12, padding: "12px 14px" }}>
               <p style={{ fontSize: "0.65rem", color: "#6a5a8a", marginBottom: 4 }}>推奨価格</p>
               <p style={{ fontSize: "1.3rem", fontWeight: 700, color: PRICE_COLOR[result.price] || "#c9b8f0" }}>
                 ¥{result.price}
               </p>
               <p style={{ fontSize: "0.63rem", color: "#6a5a8a", marginTop: 4 }}>{result.price_reason}</p>
             </div>
-            <div style={{
-              flex: 2, background: "#16102a", border: "1px solid #3a2a5a",
-              borderRadius: 12, padding: "12px 14px",
-            }}>
+            <div style={{ flex: 2, background: "#16102a", border: "1px solid #3a2a5a", borderRadius: 12, padding: "12px 14px" }}>
               <p style={{ fontSize: "0.65rem", color: "#6a5a8a", marginBottom: 4 }}>商品導線</p>
               <p style={{ fontSize: "0.75rem", color: "#c0a060", lineHeight: 1.6 }}>🛍 {result.product_note}</p>
             </div>
@@ -216,8 +224,8 @@ export default function NotePage() {
           <div style={{ background: "#16102a", border: "1px solid #3a2a5a", borderRadius: 14, padding: "16px", marginBottom: 12 }}>
             <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
               {([
-                { key: "free", label: "無料パート（前半）" },
-                { key: "paid", label: "有料パート（後半）" },
+                { key: "free", label: "無料パート" },
+                { key: "paid", label: "🔒 有料パート" },
                 { key: "cta", label: "CTA" },
               ] as const).map(({ key, label }) => (
                 <button key={key} onClick={() => setTab(key)}
@@ -239,7 +247,7 @@ export default function NotePage() {
                 borderRadius: 8, padding: "8px 12px", marginBottom: 10,
                 fontSize: "0.68rem", color: "#c0a060",
               }}>
-                🔒 この部分がnoteの有料ゾーン（¥{result.price}）になります
+                🔒 ここから有料ゾーン（¥{result.price}）
               </div>
             )}
 
@@ -264,26 +272,23 @@ export default function NotePage() {
 
           {/* FULL COPY */}
           <button onClick={() => copy(
-            `${result.titles[selectedTitle]}\n\n${result.free_part}\n\n---\nここから先は有料（¥${result.price}）---\n\n${result.paid_part}\n\n${result.cta}`,
+            `${result.titles[selectedTitle]}\n\n${result.free_part}\n\n---\nここから先は有料（¥${result.price}）\n---\n\n${result.paid_part}\n\n${result.cta}`,
             "all"
           )}
             style={{
-              width: "100%", padding: "12px",
+              width: "100%", padding: "13px",
               background: "linear-gradient(135deg, #3a2a6a, #5a3a8a)",
               border: "1px solid #7a5acc", borderRadius: 12,
               color: copied === "all" ? "#a0f0c0" : "#e0d0ff",
-              fontSize: "0.82rem", fontWeight: 700, cursor: "pointer",
+              fontSize: "0.85rem", fontWeight: 700, cursor: "pointer",
               marginBottom: 20,
             }}>
-            {copied === "all" ? "✓ 全文コピー済み！" : "📋 全文まとめてコピー（note貼り付け用）"}
+            {copied === "all" ? "✓ 全文コピー済み！noteに貼ってください" : "📋 全文まとめてコピー（note貼り付け用）"}
           </button>
         </>
       )}
 
-      <p style={{
-        textAlign: "center", fontSize: "0.62rem", color: "#2a1a4a",
-        marginTop: 16, lineHeight: 1.8,
-      }}>
+      <p style={{ textAlign: "center", fontSize: "0.62rem", color: "#2a1a4a", marginTop: 16, lineHeight: 1.8 }}>
         Serena編集室 · Phase 5 note化AI<br />
         最終確認・投稿はSerenaアカウントから中村さんが行います
       </p>
