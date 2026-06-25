@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 type Post = {
   id: number;
   pattern: string;
+  role: string;
+  hook: string;
+  full: string;
+  note_hint: string;
   text: string;
   score: number;
   score_reason: string;
@@ -47,7 +51,7 @@ export default function Home() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: finalTopic, memo }),
+        body: JSON.stringify({ category: finalTopic, customTheme: customTopic.trim() || undefined }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -206,7 +210,7 @@ export default function Home() {
 
           {/* BODY */}
           <p style={{ fontSize: "0.83rem", lineHeight: 1.85, color: "#d8d0ec", marginBottom: 10, whiteSpace: "pre-wrap" }}>
-            {(post.text || "").replace(/\\n/g, "\n")}
+            {(post.full || post.text || "").replace(/\\n/g, "\n")}
           </p>
 
           {post.score_reason && (
@@ -231,7 +235,7 @@ export default function Home() {
               }}>
               {selected[post.id] ? "✅ キュー追加済み" : "+ キューに追加"}
             </button>
-            <button onClick={() => copyText(post.id, post.text)}
+            <button onClick={() => copyText(post.id, post.full || post.text)}
               style={{
                 flex: 1, padding: "7px", borderRadius: 8,
                 border: "1px solid #3a2a5a", background: "transparent",
@@ -243,7 +247,7 @@ export default function Home() {
           </div>
 
           {/* NOTE BUTTON */}
-          <button onClick={() => goToNote(post.text)}
+          <button onClick={() => goToNote(post.full || post.text)}
             style={{
               width: "100%", padding: "8px",
               background: "linear-gradient(135deg, #1e2a1e, #2a3a2a)",
