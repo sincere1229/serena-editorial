@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = "edge";
+export const maxDuration = 60; // Node.js Runtime（60秒）
 
 const SYSTEM_PROMPT = `あなたはSerena（月のヒーラー）のソーシャルメディア投稿ライターです。
 
